@@ -49,7 +49,7 @@ def commit_block(action: str, evidence_id: str, actor: str, tx_details: dict):
     return block
 
 st.sidebar.title("⚖️ Legal Portal Control")
-st.sidebar.markdown("**MSc Research Prototype**\n*MSc IT Research*")
+#st.sidebar.markdown("**Blockchain E-Discovery Portal**")
 
 if st.session_state.authenticated_user:
     st.sidebar.success(f"User: **{st.session_state.authenticated_user['name']}**")
