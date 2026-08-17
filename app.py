@@ -53,14 +53,16 @@ def commit_block(action: str, evidence_id: str, actor: str, tx_details: dict):
     st.session_state.blockchain_ledger.append(block)
     return block
 
-st.sidebar.title("⚖️ LexLedger")
-st.sidebar.caption("Permissioned E-Discovery & Chain of Custody Portal")
+st.title("⚖️ LexLedger")
+st.caption("Permissioned E-Discovery & Chain of Custody Portal")
 
 if st.session_state.authenticated_user:
-    st.sidebar.success(f"User: **{st.session_state.authenticated_user['name']}**")
-    st.sidebar.caption(f"Role: {st.session_state.authenticated_user['role']}")
-    st.sidebar.caption(f"Address: `{st.session_state.authenticated_user['address'][:10]}...`")
-    if st.sidebar.button("Log Out"):
+    st.success(
+        f"User: **{st.session_state.authenticated_user['name']}** | "
+        f"Role: {st.session_state.authenticated_user['role']} | "
+        f"Address: `{st.session_state.authenticated_user['address'][:10]}...`"
+    )
+    if st.button("Log Out"):
         st.session_state.authenticated_user = None
         st.rerun()
 
