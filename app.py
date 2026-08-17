@@ -13,6 +13,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# --- NEW: CATCH NEXT PAGE BEFORE MENU RENDERS ---
+# This safely updates the menu before it gets drawn on the screen
+if "next_page" in st.session_state:
+    st.session_state.workflow_nav = st.session_state.next_page
+    del st.session_state.next_page
+# ------------------------------------------------
+
 STORAGE_DIR = "offchain_encrypted_storage"
 os.makedirs(STORAGE_DIR, exist_ok=True)
 
@@ -73,7 +80,6 @@ menu = [
     "6. Blockchain Audit Trail (T9 & T10)"
 ]
 
-# ADDED A KEY HERE to track navigation state programmatically
 choice = st.sidebar.radio("Evaluation Workflow Navigation", menu, key="workflow_nav")
 
 if choice == "1. Authentication (T1)":
@@ -96,9 +102,9 @@ if choice == "1. Authentication (T1)":
         st.success(f"Authenticated successfully as {selected_user}!")
         st.toast(f"Welcome back, {selected_user}!", icon="✅")
         
-        # TRANSITION: Advance to Task 2 after login
+        # TRANSITION FIX: Use the next_page staging variable
         time.sleep(1.5) 
-        st.session_state.workflow_nav = menu[1]
+        st.session_state.next_page = menu[1]
         st.rerun()
 
 if not st.session_state.authenticated_user and choice != "1. Authentication (T1)":
@@ -154,9 +160,9 @@ elif choice == "2. Evidence Registration (T2 & T3)":
             "Block Hash": block["block_hash"]
         })
         
-        # TRANSITION: Advance to Task 3 after successful registration
-        time.sleep(3) # Wait slightly longer so the user can see the generated hashes
-        st.session_state.workflow_nav = menu[2]
+        # TRANSITION FIX
+        time.sleep(3)
+        st.session_state.next_page = menu[2]
         st.rerun()
 
 elif choice == "3. Integrity Verification (T4)":
@@ -180,15 +186,14 @@ elif choice == "3. Integrity Verification (T4)":
                 st.success("🟢 **INTEGRITY MATCH CONFIRMED**: File is authentic and un-tampered!")
                 commit_block("INTEGRITY_VERIFIED_PASS", ev_id, st.session_state.authenticated_user["address"], {"result": "MATCH"})
                 
-                # TRANSITION: Advance to Task 4 after successful match
+                # TRANSITION FIX
                 time.sleep(3)
-                st.session_state.workflow_nav = menu[3]
+                st.session_state.next_page = menu[3]
                 st.rerun()
             else:
                 st.error("🔴 **TAMPER WARNING**: Live file hash DOES NOT match the recorded blockchain ledger hash!")
                 st.write(f"Live File Hash: `{live_hash}`")
                 commit_block("INTEGRITY_VERIFIED_FAIL", ev_id, st.session_state.authenticated_user["address"], {"result": "MISMATCH", "live_hash": live_hash})
-                # No transition on failure, keeps user here to review the mismatch.
 
 elif choice == "4. Custody Transfer (T6 & T7)":
     st.header("Tasks T6 & T7: Chain of Custody Transfer & History")
@@ -212,9 +217,9 @@ elif choice == "4. Custody Transfer (T6 & T7)":
                 commit_block("CUSTODY_TRANSFERRED", ev_id, st.session_state.authenticated_user["address"], {"new_custodian": new_custodian, "notes": notes})
                 st.success(f"Custody of {ev_id} transferred successfully!")
                 
-                # TRANSITION: Advance to Task 5 after transfer
+                # TRANSITION FIX
                 time.sleep(2)
-                st.session_state.workflow_nav = menu[4]
+                st.session_state.next_page = menu[4]
                 st.rerun()
                 
         with col2:
