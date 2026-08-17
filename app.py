@@ -13,12 +13,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- NEW: CATCH NEXT PAGE BEFORE MENU RENDERS ---
-# This safely updates the menu before it gets drawn on the screen
+# --- SAFE MENU ROUTING ---
 if "next_page" in st.session_state:
     st.session_state.workflow_nav = st.session_state.next_page
     del st.session_state.next_page
-# ------------------------------------------------
 
 STORAGE_DIR = "offchain_encrypted_storage"
 os.makedirs(STORAGE_DIR, exist_ok=True)
@@ -102,10 +100,15 @@ if choice == "1. Authentication (T1)":
         st.success(f"Authenticated successfully as {selected_user}!")
         st.toast(f"Welcome back, {selected_user}!", icon="✅")
         
-        # TRANSITION FIX: Use the next_page staging variable
         time.sleep(1.5) 
         st.session_state.next_page = menu[1]
         st.rerun()
+        
+    st.divider()
+    if st.session_state.authenticated_user:
+        if st.button("Next Step: Evidence Registration ➡️", type="primary"):
+            st.session_state.next_page = menu[1]
+            st.rerun()
 
 if not st.session_state.authenticated_user and choice != "1. Authentication (T1)":
     st.warning("⚠️ Please complete Task T1 (Authentication) in the sidebar to proceed.")
@@ -160,8 +163,12 @@ elif choice == "2. Evidence Registration (T2 & T3)":
             "Block Hash": block["block_hash"]
         })
         
-        # TRANSITION FIX
         time.sleep(3)
+        st.session_state.next_page = menu[2]
+        st.rerun()
+        
+    st.divider()
+    if st.button("Next Step: Integrity Verification ➡️", type="primary"):
         st.session_state.next_page = menu[2]
         st.rerun()
 
@@ -186,7 +193,6 @@ elif choice == "3. Integrity Verification (T4)":
                 st.success("🟢 **INTEGRITY MATCH CONFIRMED**: File is authentic and un-tampered!")
                 commit_block("INTEGRITY_VERIFIED_PASS", ev_id, st.session_state.authenticated_user["address"], {"result": "MATCH"})
                 
-                # TRANSITION FIX
                 time.sleep(3)
                 st.session_state.next_page = menu[3]
                 st.rerun()
@@ -194,6 +200,11 @@ elif choice == "3. Integrity Verification (T4)":
                 st.error("🔴 **TAMPER WARNING**: Live file hash DOES NOT match the recorded blockchain ledger hash!")
                 st.write(f"Live File Hash: `{live_hash}`")
                 commit_block("INTEGRITY_VERIFIED_FAIL", ev_id, st.session_state.authenticated_user["address"], {"result": "MISMATCH", "live_hash": live_hash})
+
+    st.divider()
+    if st.button("Next Step: Custody Transfer ➡️", type="primary"):
+        st.session_state.next_page = menu[3]
+        st.rerun()
 
 elif choice == "4. Custody Transfer (T6 & T7)":
     st.header("Tasks T6 & T7: Chain of Custody Transfer & History")
@@ -217,7 +228,6 @@ elif choice == "4. Custody Transfer (T6 & T7)":
                 commit_block("CUSTODY_TRANSFERRED", ev_id, st.session_state.authenticated_user["address"], {"new_custodian": new_custodian, "notes": notes})
                 st.success(f"Custody of {ev_id} transferred successfully!")
                 
-                # TRANSITION FIX
                 time.sleep(2)
                 st.session_state.next_page = menu[4]
                 st.rerun()
@@ -230,6 +240,11 @@ elif choice == "4. Custody Transfer (T6 & T7)":
                 st.caption(f"Action: {h['action']} | Actor: `{h['actor'][:10]}...`")
                 st.json(h["details"])
                 st.divider()
+
+    st.divider()
+    if st.button("Next Step: Evidence Search & Retrieval ➡️", type="primary"):
+        st.session_state.next_page = menu[4]
+        st.rerun()
 
 elif choice == "5. Evidence Search & Retrieval (T8)":
     st.header("Task T8: Evidence Search & Decryption")
@@ -254,6 +269,11 @@ elif choice == "5. Evidence Search & Retrieval (T8)":
                             mime="application/octet-stream"
                         )
 
+    st.divider()
+    if st.button("Next Step: Blockchain Audit Trail ➡️", type="primary"):
+        st.session_state.next_page = menu[5]
+        st.rerun()
+
 elif choice == "6. Blockchain Audit Trail (T9 & T10)":
     st.header("Tasks T9 & T10: Audit Log & Court Summary Report")
     
@@ -272,3 +292,8 @@ elif choice == "6. Blockchain Audit Trail (T9 & T10)":
         )
     else:
         st.info("Blockchain ledger is currently empty.")
+        
+    st.divider()
+    if st.button("Restart Workflow 🔄", type="primary"):
+        st.session_state.next_page = menu[0]
+        st.rerun()
